@@ -199,7 +199,8 @@ namespace StackedDeckOpener.Main
 
                 Input.SetCursorPos(new Vector2(item.Key.Center.X, item.Key.Center.Y));
                 Thread.Sleep(Settings.WaitMS);
-                if (GameController.IngameState.UIHover.Entity.Metadata.EndsWith("DivinationCardDeck"))
+                if (GameController.IngameState.UIHover != null && GameController.IngameState.UIHover.Entity != null &&
+                    GameController.IngameState.UIHover.Entity.Metadata.EndsWith("DivinationCardDeck"))
                 {
                     Input.Click(System.Windows.Forms.MouseButtons.Right);
                     Thread.Sleep(Settings.WaitMS);
