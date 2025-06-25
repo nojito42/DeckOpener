@@ -10,6 +10,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Threading;
 using System.Threading.Tasks;
 using Keys = System.Windows.Forms.Keys;
 
@@ -149,35 +150,31 @@ namespace StackedDeckOpener.Main
                 return;
 
             var rect = item.GetClientRect();
+
+            // Maintenir Shift enfoncé pour tout le processus
+            Input.KeyDown(Keys.LShiftKey);
+            Thread.Sleep(Settings.WaitMS / 2); // petite pause pour assurer la prise en compte
+
+            // Déplacement souris + clic droit pour ouvrir
             Input.SetCursorPos(new SharpDX.Vector2(rect.Center.X, rect.Center.Y));
-            Task.Delay(Settings.WaitMS).Wait();
+            Thread.Sleep(Settings.WaitMS);
             Input.Click(System.Windows.Forms.MouseButtons.Right);
+            Thread.Sleep(Settings.WaitMS); // animation ouverture
 
-            Task.Delay(Settings.WaitMS).Wait();
-
+            // Clic gauche pour drop dans l'inventaire (toujours en maintenant Shift)
             var ui = GameController?.IngameState?.IngameUi;
             var inv = ui?.InventoryPanel?.GetClientRect();
-            if (inv == null) return;
+            if (inv != null)
+            {
+                var dropPos = new System.Numerics.Vector2(inv.Value.TopLeft.X - 20f, inv.Value.TopLeft.Y + inv.Value.Height / 1.70f);
+                Input.SetCursorPos(new System.Numerics.Vector2(dropPos.X, dropPos.Y));
+                Thread.Sleep(Settings.WaitMS);
+                Input.Click(System.Windows.Forms.MouseButtons.Left);
+                Thread.Sleep(Settings.WaitMS / 2); // pour la stabilité
+            }
 
-            var dropPos = new System.Numerics.Vector2(inv.Value.TopLeft.X - 20f, inv.Value.TopLeft.Y + inv.Value.Height / 1.70f);
-            Input.SetCursorPos(new SharpDX.Vector2(dropPos.X, dropPos.Y));
-
-            Task.Delay(Settings.WaitMS).Wait();
-            Input.KeyDown(Keys.LShiftKey);
-            Task.Delay(Settings.WaitMS / 2).Wait();
-            Input.Click(System.Windows.Forms.MouseButtons.Left);
-            Task.Delay(Settings.WaitMS / 2).Wait();
+            // Relâcher Shift à la toute fin
             Input.KeyUp(Keys.LShiftKey);
-        }
-
-        public override void Render()
-        {
-            var inv = GameController?.IngameState?.IngameUi?.InventoryPanel?.GetClientRect();
-            if (inv == null) return;
-
-            var invX = new System.Numerics.Vector2(inv.Value.TopLeft.X - 25.0f, inv.Value.TopLeft.Y + inv.Value.Height / 1.70f);
-            var invY = new System.Numerics.Vector2(invX.X - 1, invX.Y - 17.0f);
-            Graphics.DrawFrame(invX, invY, Color.Red, 2.0f, 0, 0);
         }
     }
 }
